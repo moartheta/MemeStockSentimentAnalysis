@@ -73,7 +73,32 @@ def OAuth(api):
                                 api_version="v2")
         
         return alpaca
+
+    elif api == "twitter":
+        consumer_key = os.getenv("TWITTER_CONSUMER_KEY")
+        consumer_secret = os.getenv("TWITTER_CONSUMER_SECRET_KEY")
+        access_key = os.getenv("TWITTER_ACCESS_TOKEN")
+        access_secret = os.getenv("TWITTER_ACCESS_SECRET_TOKEN")
+    
+        if type(consumer_key) == str:
+            print("Twitter Conusmer Key Loaded!")
+        else:
+            print("Twitter Consumer Key Error!")
+        if type(consumer_secret) == str:
+            print("Twitter Consumer Secret Key Loaded!")
+        else:
+            print("Twitter Consumer Secret Key Error!")
+        if type(access_key) == str:
+            print("Twitter Access Key Loaded!")
+        else:
+            print("Twitter Access Key Error!")
+        if type(access_secret) == str:
+            print("Twitter Access Secret Key Loaded!")
+        else:
+            print("Twitter Access Secret Key Error!")
         
+        return twitter
+    
     else:
         print("Incorrect API Name")
 
