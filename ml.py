@@ -1,3 +1,4 @@
+import pandas as pd
 class LSTM:
     """
     Initialize, then run 'predict'
@@ -45,6 +46,22 @@ class LSTM:
             y.append(target)
         return np.array(X), np.array(y).reshape(-1, 1)
     
+    def make_dfs(self,df_ticker, df_features):
+        """
+        Will return a list of dataframes based on number of columns (tickers)
+        
+        """
+        dfs = []
+        counter = 0
+        for ticker in range(counter,df_ticker.columns.size):
+            df = pd.DataFrame({
+                df_ticker.columns.values[counter] : df_ticker[df_ticker.columns.values[counter]]
+            })
+            df = pd.concat([df, df_features], axis = 1, sort=False)
+            dfs.append(df)
+            counter += 1        
+        return dfs
+        
     #setter functions
     def set_num_units(self, val):
         self.num_units = val
