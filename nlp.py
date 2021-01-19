@@ -2,6 +2,9 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import pandas as pd
 import numpy as np
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
+
 def initialize():
     nltk.download('vader_lexicon')
 
@@ -68,3 +71,78 @@ def sentiment_scaler(score):
         
     return result
 
+
+def get_blob(text):
+    blob = TextBlob(text, analyzer=NaiveBayesAnalyzer())
+    return blob.sentiment
+
+def get_blob_class(text):
+    blob = TextBlob(text, analyzer=NaiveBayesAnalyzer())
+    return blob.sentiment.classification
+    
+def get_blob_pos(text):
+    blob = TextBlob(text, analyzer=NaiveBayesAnalyzer())
+    return float(blob.sentiment.p_pos)
+    
+def get_blob_neg(text):
+    blob = TextBlob(text, analyzer=NaiveBayesAnalyzer())
+    return float(blob.sentiment.p_neg)
+
+def add_blob(df):
+    blobbies = []
+    
+    df = df.copy()
+    
+    #classif = [get_blob_class(x) for x in df["Title"]]
+    #pos = [get_blob_pos(x) for x in df["Title"]]
+    #neg = [get_blob_neg(x) for x in df["Title"]]
+    
+    #print(classif)
+    #print(pos)
+    #print(neg)
+    
+    
+    for index,row in df.iterrows():
+        s = get_blob(row["Title"])
+        classif = s.classification
+        pos = s.p_pos
+        neg = s.p_neg
+                
+        blobbies.append({
+            "Blob Class" : classif,
+            "Blob Pos" : pos,
+            "Blob Neg" : neg
+        })
+        print(classif)
+        
+    df_blob = pd.DataFrame(blobbies)
+    return df_blob
+                
+#     df["Blob_Class"] = ""
+#     df["Blob_Pos"] = 0.0
+#     df["Blob_Neg"] = 0.0
+    
+#     for item in df["Title"]:
+#         print(item)
+#         s = get_blob(item)
+#         #df["Blob_Class"].append(get_blob_class(item))
+#         #df["Blob_Pos"].append(get_blob_pos(item))
+#         #df["Blob_Neg"].append(get_blob_neg(item))
+#         df["Blob_Class"].append(s.classification)
+#         df["Blob_Pos"].append(s.p_pos)
+#         df["Blob_Neg"].append(s.p_neg)
+     
+#     return df
+# #     for row, index in df.iterrows():
+# #         classif.append(list(get_blob_class(row[0])))
+# #         pos.append(get_blob_pos(row["Title"]))
+# #         neg.append(get_blob_neg(row["Title"]))
+        
+# #     df["Blob_Class"] = classif
+# #     df["Blob_Pos"] = pos
+# #     df["Blob_Neg"] = neg
+    
+# #    return df
+# #        df["Blob_Class"] = map(lambda x: get_blob_class(x), df["Title"])
+#  #       df["Blob_Pos"] = list(map(get_blob_pos,df["Title"]))
+#   #      df["Blob_Neg"] = [x: for item in list item == get_blob_neg(x)]
