@@ -89,7 +89,7 @@ def get_blob_neg(text):
     return float(blob.sentiment.p_neg)
 
 def add_blob(df):
-    blobbies = []
+   # blobbies = []
     
     df = df.copy()
     
@@ -101,23 +101,33 @@ def add_blob(df):
     #print(pos)
     #print(neg)
     
-    
-    for index,row in df.iterrows():
-        s = get_blob(row["Title"])
-        classif = s.classification
-        pos = s.p_pos
-        neg = s.p_neg
+    #----This Works, but slooowww
+    df["Blob Class"] = df["Title"].apply(get_blob_class)
+    df["Blob Pos"] = df["Title"].apply(get_blob_pos)
+    df["Blob Neg"] = df["Title"].apply(get_blob_neg)
+    #----------------------------------
+ 
+    return df
+
+   # for index,row in df.iterrows():
+   #     blob = TextBlob(row["Title"], analyzer=NaiveBayesAnalyzer())
+    #    classif = blob.sentiment.classification
+  #      pos = blob.sentiment.p_pos
+   #     neg = blob.sentiment.p_neg
                 
-        blobbies.append({
-            "Blob Class" : classif,
-            "Blob Pos" : pos,
-            "Blob Neg" : neg
-        })
-        print(classif)
+ #       df.append({
+  #          "Blob Class" : classif,
+   #         "Blob Pos" : pos,
+    #        "Blob Neg" : neg
+     #   })
+      #  print(classif)
         
-    df_blob = pd.DataFrame(blobbies)
-    return df_blob
-                
+#     df_blob = pd.DataFrame(blobbies)
+#     return df_blob
+   # return df
+    
+    
+    
 #     df["Blob_Class"] = ""
 #     df["Blob_Pos"] = 0.0
 #     df["Blob_Neg"] = 0.0
