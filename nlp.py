@@ -13,17 +13,47 @@ class NLT:
     
     def update_vader(self):
         nltk.download('vader_lexicon')
+        
+    def sentiment_cleaner(self, df):
+        """
+        Fixes the formatting issues from the 'Sentiment' field from the API
+        Returns the original dataframe with the cleaned data
+        """
+        df = df.copy()
 
+        df['Sentiment'] = df['Sentiment'].str.replace('{','')
+        df['Sentiment'] = df['Sentiment'].str.replace('}','')
+        df['Sentiment'] = df['Sentiment'].str.replace("'",'')
+        df['Sentiment'] = df['Sentiment'].str.replace("basic",'')
+        df['Sentiment'] = df['Sentiment'].str.replace(": ",'')
+        
+        return df
     
+    def fix_date(self,df):
+        """
+        Fixes the unix date and returns the original dataframe with the day in YYYY-MM-DD format
+        """
+        df = df.copy()
+        
+        df['Created'] = pd.to_datetime(df['Created'])
+        df['Created'] = df['Created'].dt.date
+        
+        return df
+
     def make_sentiment_df(self,df, src = "Reddit"):
+        """
+        This is where the money is made.  Takes dataframe and optional source (reddit or twits)
+        adds sentiment analysis fields to the dataframe and returns a new dataframe
+        """
         analyzer = SentimentIntensityAnalyzer()
         sentiments = []
-    
+        df = self.sentiment_cleaner(df)
+        df = self.fix_date(df)
         #adjust later for other API's
         if src.lower() == "reddit":
             #for index,row in df.iterrows():
             #This one is faster if it works
-            for index, row in df.itertuples():
+            for index, row in df.iterrows():
                 try:
                     title = row["Title"]
                     upvote = row["Upvote Ratio"]
@@ -61,7 +91,48 @@ class NLT:
                     })
                 except AttributeError:
                     pass
-        
+        elif src.lower() == "twits":
+            for index, row in df.iterrows():
+                try:
+                    text = row["Text"]
+                    created = row["Created"]
+                    likes = row["Likes"]
+                    sent = row["Sentiment"]
+                    sentiment = analyzer.polarity_scores(text)
+                    text_compound = sentiment["compound"]
+                    text_pos = sentiment["pos"]
+                    text_neu = sentiment["neu"]
+                    text_neg = sentiment["neg"]
+                    #sentiment = analyzer.polarity_scores(text)
+                    #To account for blank text values
+                     #commenting out unless we use text
+#                   if len(text) > 0:
+#                     text_compound = sentiment["compound"]
+#                     text_pos = sentiment["pos"]
+#                     text_neu = sentiment["neu"]
+#                     text_neg = sentiment["neg"]
+#                   else:
+#                     text_compound = np.nan
+#                     text_pos = np.nan
+#                     text_neu = np.nan
+#                     text_neg = np.nan
+
+                    sentiments.append({
+                        "Text": text,
+                        "Created": created,
+                        "Likes": likes,
+                        "Sentiment": sent,
+                        "Text_Compound" : text_compound,
+                        "Text_Pos": text_pos,
+                        "Text_Neu" : text_neu,
+                        "Text_Neg" : text_neg
+#                     "Text_Compound" : text_compound,
+#                     "Text_Positive" : text_pos,
+#                     "Text_Negative" : text_neg,
+#                     "Text_Neutral" : text_neu
+                    })
+                except AttributeError:
+                    pass
         df = pd.DataFrame(sentiments)
             #reorder columns if needed
             #cols = ["date", "text", ...]
@@ -84,6 +155,34 @@ class Blobby:
     def __init__(self):
         pass
     
+    def sentiment_cleaner(self, df):
+        """
+        Fixes the formatting issues from the 'Sentiment' field from the API
+        Returns the original dataframe with the cleaned data
+        """
+        df = df.copy()
+
+        df['Sentiment'] = df['Sentiment'].str.replace('{','')
+        df['Sentiment'] = df['Sentiment'].str.replace('}','')
+        df['Sentiment'] = df['Sentiment'].str.replace("'",'')
+        df['Sentiment'] = df['Sentiment'].str.replace("basic",'')
+        df['Sentiment'] = df['Sentiment'].str.replace(": ",'')
+        
+        return df
+    
+    def fix_date(self,df):
+        """
+        Fixes the unix date and returns the original dataframe with the day in YYYY-MM-DD format
+        """
+        
+        df = df.copy()
+        
+        df['Created'] = pd.to_datetime(df['Created'])
+        df['Created'] = df['Created'].dt.date
+        
+        return df
+    
+    #---------Probably not needed, but available
     def get_blob(self,text):
         blob = TextBlob(text, analyzer=NaiveBayesAnalyzer())
         return blob.sentiment
@@ -103,19 +202,31 @@ class Blobby:
     def get_blob_neg(self,text):
         blob = TextBlob(text, analyzer=NaiveBayesAnalyzer())
         return float(blob.sentiment.p_neg)
-
-    def add_blob(self,df):
+    #----------------------------------------------------
+    
+    
+    def add_blob(self,df, col_name):
+        """
+        Primary method - takes a dataframe, and the name of the column to analyze (str)
+        Appends classification, positive score, and negative score and returns a new dataframe
+        
+        """
+        # Prevents re-training on each iteration - speeds up method by orders of magnitude
         tb = Blobber(analyzer = NaiveBayesAnalyzer())
+        
         df = df.copy()
-
+        
+        df = self.sentiment_cleaner(df)
+        df = self.fix_date(df)
+        
         classif = []
         pos = []
         neg = []
     
         for idx, row in enumerate(df.itertuples(index = False)):
-            classif.append(tb(df["Title"][idx]).sentiment.classification)
-            pos.append(tb(df["Title"][idx]).sentiment.p_pos)
-            neg.append(tb(df["Title"][idx]).sentiment.p_neg)
+            classif.append(tb(df[col_name][idx]).sentiment.classification)
+            pos.append(tb(df[col_name][idx]).sentiment.p_pos)
+            neg.append(tb(df[col_name][idx]).sentiment.p_neg)
     
         df["Blob Class"] = classif
         df["Blob Pos"]= pos

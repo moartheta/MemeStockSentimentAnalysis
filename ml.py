@@ -1,4 +1,14 @@
 import pandas as pd
+import numpy as np
+import pandas as pd
+import plotly.express as px
+#pn.extension('plotly')
+import hvplot.pandas
+
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+
 class LSTM:
     """
     Initialize, then run 'predict'
@@ -9,20 +19,13 @@ class LSTM:
       dropout = 0.2
       epochs = 15
       batch_size = 2
-      window_size = 10
+      window_size = 2
       train_size = 0.7
       
     predict requires feature_col (int) and
     target_col (int), returns dataframe
     
     """
-    
-    import numpy as np
-    import pandas as pd
-    import hvplot.pandas
-    from sklearn.preprocessing import MinMaxScaler
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import LSTM, Dense, Dropout
     
     def __init__(self, df = None):
         #set default values
@@ -33,15 +36,19 @@ class LSTM:
         self.dropout = 0.2
         self.epochs = 15
         self.batch_size = 2
-        self.window_size = 10
+        self.window_size = 2
         self.train_size = 0.7
+        #--------not sure if these are needed yet
+        self.X_list = []
+        self.y_list = []
+        #--------------------------------------
         
     def window_data(self,feature_col_number, target_col_number):
         X = []
         y = []
-        for i in range(len(self.df) - window - 1):
-            features = self.df.iloc[i:(i + window), feature_col_number]
-            target = self.df.iloc[(i + window), target_col_number]
+        for i in range(len(self.df) - self.window_size - 1):
+            features = self.df.iloc[i:(i + self.window_size), feature_col_number]
+            target = self.df.iloc[(i + self.window_size), target_col_number]
             X.append(features)
             y.append(target)
         return np.array(X), np.array(y).reshape(-1, 1)
@@ -49,8 +56,10 @@ class LSTM:
     def make_dfs(self,df_ticker, df_features):
         """
         Will return a list of dataframes based on number of columns (tickers)
+        Sandbox for now, but we can adjust as needed to re-configure dfs
         
         """
+        
         dfs = []
         counter = 0
         for ticker in range(counter,df_ticker.columns.size):
@@ -63,6 +72,7 @@ class LSTM:
         return dfs
         
     #setter functions
+    #used to override the default values from the constructor
     def set_num_units(self, val):
         self.num_units = val
     def set_dropout(self, val):
@@ -76,19 +86,30 @@ class LSTM:
     def set_train_size(self,val):
         self.train_size = val
         
+    #should be working correctly, but having issues when calling from predict method    
     def split_me(self, X, y):
+        """
+        Splits data into training variables, returns all 4 so must be unpacked by 4 when called
+        """
         split = int(self.train_size * len(X))
         X_train = X[: split -1]
         X_test = X[split:]
         y_train = y[: split -1]
         y_test = y[split:]
-        return X_train, x_test, y_train, y_test
-        
+        return X_train, X_test, y_train, y_test
+    
+    #should be working correctly, but having issues when calling from predict method
+    #specifically the scaler, and the shape
     def scale_me(self, X_train,_X_test, y_train, y_test):
-        scaler = MinMaxScaler().fit(X)
+        """
+        Must pass 4 training variables: X_train, X_test, y_train, and y_test
+        Returns 4 scaled training variables, X_train and X_test are reshaped.
+        Must be unpacked by 4 variables when called
+        """
+        scaler = MinMaxScaler().fit(self.X_list)
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
-        scaler.fit(y)
+        scaler.fit(self.y_list)
         y_train = scaler.transform(y_train)
         y_test = scaler.transform(y_test)
 
@@ -96,15 +117,36 @@ class LSTM:
         X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
         return X_train,X_test,y_train,y_test
         
-    def predict(self,feature_col=None, target_col=None):
+    def predict(self,feature_col_num, target_col_num):
         """
         Dataframe must be prepared prior to passing in
         will return prediction dataframe
         """
-        X, y = window_data(self.df, self.window_size, feature_col, target_col)
         
-        X_train, X_test, y_train, y_test = split_me(X,y,self.train_size)        
-        X_train, X_test, y_train, y_test = scale_me(X_train_X_test,y_train,y_test)
+        #ARGHHHHHHH-------------------------------------
+        X, y = self.window_data(feature_col_num, target_col_num)
+        
+        #Not sure if these are needed yet
+        self.X_list = X
+        self.y_list = y
+        #------------------------------
+  
+        X_train, X_test, y_train, y_test = self.split_me(X, y)        
+        
+        X_train, X_test, y_train, y_test = self.scale_me(X_train, X_test, y_train, y_test)
+        
+        #Use either scale_me above, or what is below, but not both :-)
+#         scaler = MinMaxScaler().fit(X)
+#         X_train = scaler.transform(X_train)
+#         X_test = scaler.transform(X_test)
+#         scaler.fit(y)
+#         y_train = scaler.transform(y_train)
+#         y_test = scaler.transform(y_test)
+
+#         X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+#         X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
+        #--------------End ARGHHHHHHHHHHHHHHHHHHHHHHHH
+        
         
         #Might be tricky to separate this out right now due to coding for layers
         model = Sequential()
@@ -150,14 +192,11 @@ class LSTM:
         return stocks
     
 
-        #expand on this later
+        #basic starter plots - expand on this later.  possibly create separate file
         def plot_me(self, df):
             return df.plot()
         
         def hvscatter(self,df,x,y, title = "Scatter Plot"):
-            import plotly.express as px
-            pn.extension('plotly')
-            import hvplot.pandas
             return df.hvplot.scatter(
                 x = x,
                 y = y,
@@ -165,9 +204,6 @@ class LSTM:
             )
         
         def pxscatter(self,df,x,y,title = "Scatter Plot"):
-            import plotly.express as px
-            pn.extension('plotly')
-            import hvplot.pandas
             return px.scatter(
                 df,
                 x = x,
