@@ -111,11 +111,23 @@ def fetch_subreddit(reddit_access, subreddit):
     return subreddit
 
 
-def fetch_reddit_comments(subreddit, comment_limit):
+def fetch_reddit_comments(api_connection, search, subreddit, max_response):
+    
+    posts = api_connection.search_submissions(q=search, subreddit=subreddit)
+
+    max_response_cache = max_response
+    
+    cache = []
+
+    for c in posts:
+        cache.append(c)
+
+        if len(cache) >= max_response_cache:
+            break
     
     combined = []
-    
-    for submission in subreddit.top(limit=comment_limit):
+
+    for submission in cache:
         data = []
         data.append(submission.title)
         data.append(submission.upvote_ratio)
@@ -126,7 +138,14 @@ def fetch_reddit_comments(subreddit, comment_limit):
     reddit_posts = pd.DataFrame(combined, columns=['Title', 'Upvote Ratio', 'Text', 'Date'])
     reddit_posts['Date'] = pd.to_datetime(reddit_posts['Date'], unit = 's')
     
-    return reddit_posts
+    cleaned_comments = reddit_posts[(reddit_posts['Text'] != '[removed]')]
+    cleaned_comments = cleaned_comments[(cleaned_comments['Text'] != '[deleted]')]
+    
+    length = len(reddit_posts.index)
+    
+    print(f"Your request returned {length} results.")
+    
+    return cleaned_comments
         
 def fetch_alpaca(alpaca, tickers, start_date, end_date, period):
     
