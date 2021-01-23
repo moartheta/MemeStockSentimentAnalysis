@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 
-class LSTM:
+class LST:
     """
     Initialize, then run 'predict'
     Initializing will set the following default values:
@@ -38,9 +38,6 @@ class LSTM:
         self.batch_size = 2
         self.window_size = 2
         self.train_size = 0.7
-        #--------not sure if these are needed yet
-        self.X_list = []
-        self.y_list = []
         #--------------------------------------
         
     def window_data(self,feature_col_number, target_col_number):
@@ -106,16 +103,16 @@ class LSTM:
         Returns 4 scaled training variables, X_train and X_test are reshaped.
         Must be unpacked by 4 variables when called
         """
-        scaler = MinMaxScaler().fit(self.X_list)
+        scaler = MinMaxScaler().fit(X_train)
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
-        scaler.fit(self.y_list)
-        y_train_scaled = scaler.transform(y_train)
-        y_test_scaled = scaler.transform(y_test)
+        scaler.fit(y_train)
+        y_train = scaler.transform(y_train)
+        y_test = scaler.transform(y_test)
 
-        X_train_scaled = X_train_scaled.reshape((X_train_scaled.shape[0], X_train_scaled.shape[1], 1))
-        X_test_scaled = X_test_scaled.reshape((X_test_scaled.shape[0], X_test_scaled.shape[1],1))
-        return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled
+        X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+        X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
+        return X_train,X_test,y_train,y_test
         
     def predict(self,feature_col_num, target_col_num):
         """
@@ -123,30 +120,12 @@ class LSTM:
         will return prediction dataframe
         """
         
-        #ARGHHHHHHH-------------------------------------
         X, y = self.window_data(feature_col_num, target_col_num)
-        
-        #Not sure if these are needed yet
-        self.X_list = X
-        self.y_list = y
 
-        #ARGHHHH..................................
-  
         X_train, X_test, y_train, y_test = self.split_me(X, y)        
         
-        X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled = self.scale_me(X_train, X_test, y_train, y_test)
+        X_train, X_test, y_train, y_test = self.scale_me(X_train, X_test, y_train, y_test)
         
-        #Use either scale_me above, or what is below, but not both :-)
-#         scaler = MinMaxScaler().fit(X)
-#         X_train = scaler.transform(X_train)
-#         X_test = scaler.transform(X_test)
-#         scaler.fit(y)
-#         y_train = scaler.transform(y_train)
-#         y_test = scaler.transform(y_test)
-
-#         X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
-#         X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
-        #--------------End ARGHHHHHHHHHHHHHHHHHHHHHHHH
         
         #Might be tricky to separate this out right now due to coding for layers
         model = Sequential()
@@ -173,25 +152,24 @@ class LSTM:
         model.compile(optimizer = "adam", loss = "mean_squared_error")
 
         model.fit(
-            X_train_scaled, y_train_scaled,
+            X_train, y_train,
             epochs = self.epochs,
             shuffle = False,
             batch_size = self.batch_size, verbose = 1
         )
 
-        predicted = model.predict(X_test_scaled)
-
+        predicted = model.predict(X_test)
+        scaler = MinMaxScaler().fit(y_train)
         predicted_prices = scaler.inverse_transform(predicted)
-        real_prices = scaler.inverse_transform(y_test_scaled.reshape(-1, 1))
+        real_prices = scaler.inverse_transform(y_test.reshape(-1, 1))
 
         stocks = pd.DataFrame({
             "Real": real_prices.ravel(),
             "Predicted": predicted_prices.ravel()
-            }, index = df.index[-len(real_prices): ]) 
+            }, index = self.df.index[-len(real_prices): ]) 
 
         return stocks
     
-
         #basic starter plots - expand on this later.  possibly create separate file
         def plot_me(self, df):
             return df.plot()
