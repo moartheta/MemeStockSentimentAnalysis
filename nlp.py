@@ -7,6 +7,45 @@ from textblob import Blobber
 from textblob.sentiments import NaiveBayesAnalyzer
 
 
+#def join_tweets(df1, df2, field_map):
+    
+#    field_map = {
+#        "Title" : "Tweet",
+#        "Date" : "Date"
+#    }
+    
+    
+    
+#    pd.concat([df1,df2])
+
+def sentiment_cleaner(df):
+    """
+    Fixes the formatting issues from the 'Sentiment' field from the API
+    Returns the original dataframe with the cleaned data
+    """
+    df = df.copy()
+
+    df['Sentiment'] = df['Sentiment'].str.replace('{','')
+    df['Sentiment'] = df['Sentiment'].str.replace('}','')
+    df['Sentiment'] = df['Sentiment'].str.replace("'",'')
+    df['Sentiment'] = df['Sentiment'].str.replace("basic",'')
+    df['Sentiment'] = df['Sentiment'].str.replace(": ",'')
+        
+    return df
+
+
+def fix_date(df):
+    """
+    Fixes the unix date and returns the original dataframe with the day in YYYY-MM-DD format
+    """
+        
+    df = df.copy()
+        
+    df['Created'] = pd.to_datetime(df['Created'])
+    df['Created'] = df['Created'].dt.date
+        
+    return df
+
 class NLT:
     def __init__(self):
         pass
@@ -14,31 +53,6 @@ class NLT:
     def update_vader(self):
         nltk.download('vader_lexicon')
         
-    def sentiment_cleaner(self, df):
-        """
-        Fixes the formatting issues from the 'Sentiment' field from the API
-        Returns the original dataframe with the cleaned data
-        """
-        df = df.copy()
-
-        df['Sentiment'] = df['Sentiment'].str.replace('{','')
-        df['Sentiment'] = df['Sentiment'].str.replace('}','')
-        df['Sentiment'] = df['Sentiment'].str.replace("'",'')
-        df['Sentiment'] = df['Sentiment'].str.replace("basic",'')
-        df['Sentiment'] = df['Sentiment'].str.replace(": ",'')
-        
-        return df
-    
-    def fix_date(self,df):
-        """
-        Fixes the unix date and returns the original dataframe with the day in YYYY-MM-DD format
-        """
-        df = df.copy()
-        
-        df['Created'] = pd.to_datetime(df['Created'])
-        df['Created'] = df['Created'].dt.date
-        
-        return df
 
     def make_sentiment_df(self,df, src = "Reddit"):
         """
@@ -47,8 +61,7 @@ class NLT:
         """
         analyzer = SentimentIntensityAnalyzer()
         sentiments = []
-        df = self.sentiment_cleaner(df)
-        df = self.fix_date(df)
+        df = sentiment_cleaner(df)
         #adjust later for other API's
         if src.lower() == "reddit":
             #for index,row in df.iterrows():
@@ -56,34 +69,22 @@ class NLT:
             for index, row in df.iterrows():
                 try:
                     title = row["Title"]
+                    created = row["Date"]
                     upvote = row["Upvote Ratio"]
-                    text = row["Text"]
                     sentiment = analyzer.polarity_scores(title)
                     title_compound = sentiment["compound"]
                     title_pos = sentiment["pos"]
                     title_neu = sentiment["neu"]
                     title_neg = sentiment["neg"]
-                    sentiment = analyzer.polarity_scores(text)
-                    #To account for blank text values
-                     #commenting out unless we use text
-#                   if len(text) > 0:
-#                     text_compound = sentiment["compound"]
-#                     text_pos = sentiment["pos"]
-#                     text_neu = sentiment["neu"]
-#                     text_neg = sentiment["neg"]
-#                   else:
-#                     text_compound = np.nan
-#                     text_pos = np.nan
-#                     text_neu = np.nan
-#                     text_neg = np.nan
 
                     sentiments.append({
-                        "Title": title,
+                        "Text": title,
+                        "Created" : created,
                         "Upvote_Ratio": upvote,
-                        "Reddit_Title_Compound": title_compound,
-                        "Reddit_Title_Positive": title_pos,
-                        "Reddit_Title_Negative": title_neg,
-                        "Reddit_Title_Neutral" : title_neu,
+                        "Reddit_Compound": title_compound,
+                        "Reddit_Positive": title_pos,
+                        "Reddit_Negative": title_neg,
+                        "Reddit_Neutral" : title_neu,
 #                     "Text_Compound" : text_compound,
 #                     "Text_Positive" : text_pos,
 #                     "Text_Negative" : text_neg,
@@ -103,40 +104,25 @@ class NLT:
                     text_pos = sentiment["pos"]
                     text_neu = sentiment["neu"]
                     text_neg = sentiment["neg"]
-                    #sentiment = analyzer.polarity_scores(text)
-                    #To account for blank text values
-                     #commenting out unless we use text
-#                   if len(text) > 0:
-#                     text_compound = sentiment["compound"]
-#                     text_pos = sentiment["pos"]
-#                     text_neu = sentiment["neu"]
-#                     text_neg = sentiment["neg"]
-#                   else:
-#                     text_compound = np.nan
-#                     text_pos = np.nan
-#                     text_neu = np.nan
-#                     text_neg = np.nan
 
                     sentiments.append({
                         "Text": text,
                         "Created": created,
                         "Likes": likes,
                         "Sentiment": sent,
-                        "Text_Compound" : text_compound,
-                        "Text_Pos": text_pos,
-                        "Text_Neu" : text_neu,
-                        "Text_Neg" : text_neg
-#                     "Text_Compound" : text_compound,
-#                     "Text_Positive" : text_pos,
-#                     "Text_Negative" : text_neg,
-#                     "Text_Neutral" : text_neu
+                        "Twit_Compound" : text_compound,
+                        "Twit_Pos": text_pos,
+                        "Twit_Neu" : text_neu,
+                        "Twit_Neg" : text_neg
                     })
                 except AttributeError:
                     pass
+
         df = pd.DataFrame(sentiments)
-            #reorder columns if needed
-            #cols = ["date", "text", ...]
-            #df = df[cols]
+        df = fix_date(df)
+        #reorder columns if needed
+        #cols = ["date", "text", ...]
+        #df = df[cols]
         return df 
 
     def show_stats(self,df):
@@ -155,32 +141,8 @@ class Blobby:
     def __init__(self):
         pass
     
-    def sentiment_cleaner(self, df):
-        """
-        Fixes the formatting issues from the 'Sentiment' field from the API
-        Returns the original dataframe with the cleaned data
-        """
-        df = df.copy()
 
-        df['Sentiment'] = df['Sentiment'].str.replace('{','')
-        df['Sentiment'] = df['Sentiment'].str.replace('}','')
-        df['Sentiment'] = df['Sentiment'].str.replace("'",'')
-        df['Sentiment'] = df['Sentiment'].str.replace("basic",'')
-        df['Sentiment'] = df['Sentiment'].str.replace(": ",'')
-        
-        return df
-    
-    def fix_date(self,df):
-        """
-        Fixes the unix date and returns the original dataframe with the day in YYYY-MM-DD format
-        """
-        
-        df = df.copy()
-        
-        df['Created'] = pd.to_datetime(df['Created'])
-        df['Created'] = df['Created'].dt.date
-        
-        return df
+
     
     #---------Probably not needed, but available
     def get_blob(self,text):
@@ -216,8 +178,8 @@ class Blobby:
         
         df = df.copy()
         
-        df = self.sentiment_cleaner(df)
-        df = self.fix_date(df)
+        df = sentiment_cleaner(df)
+        df = fix_date(df)
         
         classif = []
         pos = []
