@@ -126,25 +126,6 @@ class LST:
         
         X_train, X_test, y_train, y_test = self.scale_me(X_train, X_test, y_train, y_test)
         
-        split = int(self.train_size * len(X))
-        X_train = X[: split -1]
-        X_test = X[split:]
-        y_train = y[: split -1]
-        y_test = y[split:]
-        
-        scaler = MinMaxScaler().fit(X_train)
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
-        scaler.fit(y_train)
-        y_train = scaler.transform(y_train)
-        y_test = scaler.transform(y_test)
-
-        X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
-        X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
-        return X_train,X_test,y_train,y_test
-        
-        
-        
         
         #Might be tricky to separate this out right now due to coding for layers
         model = Sequential()
