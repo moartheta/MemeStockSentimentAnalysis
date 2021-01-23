@@ -100,7 +100,7 @@ class LSTM:
     
     #should be working correctly, but having issues when calling from predict method
     #specifically the scaler, and the shape
-    def scale_me(self, X_train,_X_test, y_train, y_test):
+    def scale_me(self, X_train, X_test, y_train, y_test):
         """
         Must pass 4 training variables: X_train, X_test, y_train, and y_test
         Returns 4 scaled training variables, X_train and X_test are reshaped.
@@ -110,12 +110,12 @@ class LSTM:
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
         scaler.fit(self.y_list)
-        y_train = scaler.transform(y_train)
-        y_test = scaler.transform(y_test)
+        y_train_scaled = scaler.transform(y_train)
+        y_test_scaled = scaler.transform(y_test)
 
-        X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
-        X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
-        return X_train,X_test,y_train,y_test
+        X_train_scaled = X_train_scaled.reshape((X_train_scaled.shape[0], X_train_scaled.shape[1], 1))
+        X_test_scaled = X_test_scaled.reshape((X_test_scaled.shape[0], X_test_scaled.shape[1],1))
+        return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled
         
     def predict(self,feature_col_num, target_col_num):
         """
@@ -129,11 +129,12 @@ class LSTM:
         #Not sure if these are needed yet
         self.X_list = X
         self.y_list = y
-        #------------------------------
+
+        #ARGHHHH..................................
   
         X_train, X_test, y_train, y_test = self.split_me(X, y)        
         
-        X_train, X_test, y_train, y_test = self.scale_me(X_train, X_test, y_train, y_test)
+        X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled = self.scale_me(X_train, X_test, y_train, y_test)
         
         #Use either scale_me above, or what is below, but not both :-)
 #         scaler = MinMaxScaler().fit(X)
@@ -147,7 +148,6 @@ class LSTM:
 #         X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
         #--------------End ARGHHHHHHHHHHHHHHHHHHHHHHHH
         
-        
         #Might be tricky to separate this out right now due to coding for layers
         model = Sequential()
         number_units = self.num_units
@@ -158,7 +158,7 @@ class LSTM:
         units = number_units,
         return_sequences = True,
         input_shape = (X_train.shape[1], 1))
-    )
+        )
 
         model.add(Dropout(dropout_fraction))
         #Layer2
@@ -173,16 +173,16 @@ class LSTM:
         model.compile(optimizer = "adam", loss = "mean_squared_error")
 
         model.fit(
-            X_train, y_train,
+            X_train_scaled, y_train_scaled,
             epochs = self.epochs,
             shuffle = False,
             batch_size = self.batch_size, verbose = 1
         )
 
-        predicted = model.predict(X_test)
+        predicted = model.predict(X_test_scaled)
 
         predicted_prices = scaler.inverse_transform(predicted)
-        real_prices = scaler.inverse_transform(y_test.reshape(-1, 1))
+        real_prices = scaler.inverse_transform(y_test_scaled.reshape(-1, 1))
 
         stocks = pd.DataFrame({
             "Real": real_prices.ravel(),
