@@ -5,18 +5,21 @@ import numpy as np
 from textblob import TextBlob
 from textblob import Blobber
 from textblob.sentiments import NaiveBayesAnalyzer
+from pathlib import Path
 
 
-#def join_tweets(df1, df2, field_map):
+def combine(file1, file2):
+    f1 = Path(file1)
+    f2 = Path(file2)
+    df1 = pd.read_csv(f1)
+    df2 = pd.read_csv(f2)
     
-#    field_map = {
-#        "Title" : "Tweet",
-#        "Date" : "Date"
-#    }
+    df = pd.concat([df1,df2], axis = 0)
     
+    df = df.groupby(["Created"]).mean()
+    df.sort_index(inplace = True)
     
-    
-#    pd.concat([df1,df2])
+    return df
 
 def sentiment_cleaner(df):
     """
@@ -41,7 +44,7 @@ def fix_date(df):
         
     df = df.copy()
         
-    df['Created'] = pd.to_datetime(df['Created'])
+    df['Created'] = pd.to_datetime(df['Created'], utc = True)
     df['Created'] = df['Created'].dt.date
         
     return df
@@ -86,10 +89,6 @@ class NLT:
                         "NLTK_Positive": title_pos,
                         "NLTK_Negative": title_neg,
                         "NLTK_Neutral" : title_neu,
-#                     "Text_Compound" : text_compound,
-#                     "Text_Positive" : text_pos,
-#                     "Text_Negative" : text_neg,
-#                     "Text_Neutral" : text_neu
                     })
                 except AttributeError:
                     pass

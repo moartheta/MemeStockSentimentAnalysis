@@ -121,13 +121,27 @@ class LST:
         """
         
         X, y = self.window_data(feature_col_num, target_col_num)
+        
+        #Splitting the data
+        split = int(self.train_size * len(X))
+        X_train = X[: split -1]
+        X_test = X[split:]
+        y_train = y[: split -1]
+        y_test = y[split:]
+        
+        #Scaling the data
+        scaler = MinMaxScaler().fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+        scaler.fit(y_train)
+        y_train = scaler.transform(y_train)
+        y_test = scaler.transform(y_test)
 
-        X_train, X_test, y_train, y_test = self.split_me(X, y)        
+        #Reshaping the data
+        X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+        X_test = X_test.reshape((X_test.shape[0], X_test.shape[1],1))
         
-        X_train, X_test, y_train, y_test = self.scale_me(X_train, X_test, y_train, y_test)
-        
-        
-        #Might be tricky to separate this out right now due to coding for layers
+        #Initializing the model
         model = Sequential()
         number_units = self.num_units
         dropout_fraction = self.dropout
@@ -151,6 +165,7 @@ class LST:
 
         model.compile(optimizer = "adam", loss = "mean_squared_error")
 
+        #Fitting the model
         model.fit(
             X_train, y_train,
             epochs = self.epochs,
@@ -158,17 +173,18 @@ class LST:
             batch_size = self.batch_size, verbose = 1
         )
 
+        #Making predictions
         predicted = model.predict(X_test)
-        scaler = MinMaxScaler().fit(y_train)
         predicted_prices = scaler.inverse_transform(predicted)
         real_prices = scaler.inverse_transform(y_test.reshape(-1, 1))
 
+        #Putting predictions in dataframe
         stocks = pd.DataFrame({
             "Real": real_prices.ravel(),
             "Predicted": predicted_prices.ravel()
             }, index = self.df.index[-len(real_prices): ]) 
 
-        return predicted_prices
+        return stocks
     
         #basic starter plots - expand on this later.  possibly create separate file
         def plot_me(self, df):
