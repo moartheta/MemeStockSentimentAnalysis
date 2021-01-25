@@ -225,13 +225,14 @@ def price_vs_sentiment(tickers):
         tweets.index = pd.to_datetime(tweets.index, utc = True)
         tweets.index = tweets.index.date
         
-        prices = prices[[symbol]]
+        prices = prices[[symbol.upper()]]
         prices.index = pd.to_datetime(prices.index, utc = True)
         prices.index = prices.index.date
         
         combined = tweets.merge(prices, left_index=True, right_index=True).dropna()
-        combined['NLTK_Compound'] = (combined['NLTK_Compound']) * (combined[symbol].mean())
-        combined['Blob Score'] = (combined['Blob Score']) * (combined[symbol].mean())
+        
+        #combined['NLTK_Compound'] = (combined['NLTK_Compound']) * (combined[symbol.upper()].mean())
+        #combined['Blob Score'] = (combined['Blob Score']) * (combined[symbol.upper()].mean())
         
         filename = 'Data/MasterSentiment/VersusPrice/price_vs_sentiment_{}.csv'.format(symbol)
         combined.to_csv(filename, header=True, index=True)
