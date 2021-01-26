@@ -59,6 +59,8 @@ Data manipulation was fairly straight forward.  Once the challenge of gathering 
 
 We tried to abstract away as much of the code as possible, writing multiple python files utilizing the classMethod syntax with all the underlying functions required to run our sentiment analysis and neural network models.  This made processing all of our data much easier and less time consuming without cluttering up our notebooks.
 
+![Flowchart](images/code_flowchart.png)
+
 ###### NLP 
 We averaged the NLTK and TextBlob scores seperately, grouped by day to account for multiple posts per day, in order to generate our sentiment score.  Because our data included *actual* sentiment scores in the form of 'Likes', 'Upvote Ratios' and in the case of StocksTwits, a straight up declaration by the poster if they were bullish or bearish, we plotted some additional validation metrics of our generated scores versus these data points.
 
