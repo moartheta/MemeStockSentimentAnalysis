@@ -1,31 +1,42 @@
-# Can you really drive a stock price with social media hype?
-# The rise of Robinhood: 
+![Social Media](images/projectlogo.png)
 
 By: Camillo D'Orazio, Todd Shevlin, Daniel Singer, Gregory Terrinoni - January 2021
 
-![Social Media](https://i1.wp.com/thedatascientist.com/wp-content/uploads/2018/10/sentiment-analysis.png)<sup>1<sup>
 
 # Overview 
 
-The scope of the project is to look at some momemtum stocks that are most talked about on social media platforms, and more specifically, are hyped by millenials. Perform sentiment analysis on 5 momentum stocks - Tesla, GameStop, PLTR, PLUG, and NIO. <sup>2<sup> 
+Armed with easy access to stock investing through Robinhood and the ability to coordinate and share ideas through social media platforms like Twitter and Reddit, young traders are finding themselves in the surprising position of wielding an outsized amount of influence on stock prices.  
 
-We will use various tools and machine learning models to predict prices using closing prices of momentum stocks and perform sentiment analysis on these 5 highly touted stocks on social media platforms.
+This project analyzes a basket of momemtum stocks that are most talked about on social media platforms, and more specifically, wildly hyped by millenials.  Our basket includes: 
+
+* GME - GameStop
+* TSLA - Tesla
+* PLTR - Plantair
+* PLUG - PlugPower
+* NIO - NIO Inc.
+
+
+We utilized two different NLP models (NLTK and TextBlob) to calculate a daily sentiment score on posts across both StockTwits and the subreddit r/WallStreetBets over the past 5 months.  We then fed this data into an artifical recurrent neural network model (LSTM) to determine if the calculated sentiment scores had any predictive power for forecasting future prices in our basket of stocks.  
+
+
 
 # Hypothesis
-## Does social media chatter matter for stock prices?
 
-*"Is what people say really a driver for stock price movements?"*
+### Does social media chatter influence stock prices?
 
-Our hypothesis for this project is to determine whether social meda chatter has an impact on the price movement of certain stocks regardless of any financial fundemental analysis.
+![Social Media](https://i1.wp.com/thedatascientist.com/wp-content/uploads/2018/10/sentiment-analysis.png)
+
+Going into this project we believed that social media sentiment (both positive and negative) would have an observable impact on the movement of stock prices.
 
 # Model Summary
 
-#### There were three total models used for the project:
-1) NLTK - A well-known Natural Language Processing package used for sentiment analysis.
-2) TextBlob - an alternative sentiment analysis tool, used in conjunction with the NLTK model.
-3) The LSTM (Long Short Term Memory Recurrent Neural Network) model via Tensorflow/Keras, as it is one of the strongest predictive models we have used.
+We utilized three models for this project:
+    
+1. NLTK - A well-known Natural Language Processing package used for sentiment analysis.
+2. TextBlob - An alternative sentiment analysis tool, used in conjunction with the NLTK model.
+3. The LSTM (Long Short Term Memory Recurrent Neural Network) model via Tensorflow/Keras, as it is one of the strongest predictive models we have used.
 
-If there had been additional time, we also considered using a Logistic Regression model.  
+*If there were more time for the project, we would have liked to expand the number of features in our data set to include financial data (P/E, marketcap, divided, institutional holding %) as well as running some logistic regression models (ARIMA ect) to compare it versus the RNN model.*
 
 # Data Cleanup & Model Training
 
@@ -33,18 +44,35 @@ If there had been additional time, we also considered using a Logistic Regressio
 Discuss any problems that arose with preparing the data or training the model that you didn't anticipate.
 Discuss the overall training process and highlight anything of interest with the training process: Cloud resources used, training time required, issues with training.*
 #### Obtaining And Structuring The Data
-1) Obtaining the data from various API's was challenging.  Some API's were not working correctly, others severely limited the available data.  In the end we utilized data from Reddit, StockTwits, and Alpaca.
-2) There were some dataframe manipulation challenges, assuring indexes and dates were in the correct format, column headings and data types for the rows were consistent for concatenating and merging, and getting to the "final dataframes".  However, it was just a matter of going through the process, and some trial and error.
 
-#### Model Development
-1) We separated the models, classes, and functions into separate files.  This made code maintenance and troubleshooting much easier, not to mention cutting down on the total code needed.
-2) On the sentiment models, the largest challenge was getting the TextBlobs to run faster.  By default it retrains every time it runs, which was causing major performance issues (about 20 minutes for every 1000 rows).  After searching, StackOverflow presented a solution to prevent re-training, and improved the performance by orders of magnitude.
-3) The largest challenge we ran into on the LSTM model was using multiple features.  This took a fair amount of searching and fine tuning.  Other than this, it was pretty standard model development.   
+>API Connections 
+
+Obtaining the data from various API's was challenging.  Some API's were not working correctly and others severely limited the available data.  After getting creative, we were able to access the front-end of the StockTwits API as well as utilizing a few wrappers (PRAW and PSAW) to connect to the Reddit API.
+
+![MSE](images/reddit_api.jpg)
+
+> Manipulating Data
+
+Data manipulation was fairly straight forward.  Once the challenge of gathering the data from various APIs was accomplished it was just a matter of merging all the relevant pieces together.  The wrappers for the Reddit API helped immensely in terms of ease of access to the underlying data.
+
+> Model Development
+
+We tried to abstract away as much of the code as possible, writing multiple python files utilizing the classMethod syntax with all the underlying functions required to run our sentiment analysis and neural network models.  This made processing all of our data much easier and less time consuming without cluttering up our notebooks.
+
+###### NLP 
+We averaged the NLTK and TextBlob scores seperately, grouped by day to account for multiple posts per day, in order to generate our sentiment score.  Because our data included *actual* sentiment scores in the form of 'Likes', 'Upvote Ratios' and in the case of StocksTwits, a straight up declaration by the poster if they were bullish or bearish, we plotted some additional validation metrics of our generated scores versus these data points.
+
+###### LSTM
+We fed both one (lagged price) and three (price plus the two sentiment scores) features into our LSTM model for the purpose of comparing whether the addition of sentiment scores produced a more accurate prediction.  It was a matter of trial and error on the initial set up, playing with epochs, batch-size, and window size when trying to fit the model.  
 
 
 # Model Evaluation
 
-*Discuss the techniques you used to evaluate the model performance.*
+As mentioned above, we ran the same baseline model without the sentiment scores so we could compare the impact of adding the sentiment feature to the model performance.
+
+There was a lot of variability in the model across the basket of stocks.  Some performed pretty well while others were abysmal:
+
+![MSE](images/mse_diff.PNG)
 
 # Analysis Results / Observations
 
