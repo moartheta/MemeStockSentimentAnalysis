@@ -42,10 +42,6 @@ We utilized three models for this project:
 
 # Data Cleanup & Model Training
 
-*Describe the exploration and cleanup process.
-Discuss any problems that arose with preparing the data or training the model that you didn't anticipate.
-Discuss the overall training process and highlight anything of interest with the training process: Cloud resources used, training time required, issues with training.*
-
 #### Obtaining And Structuring The Data
 
 >API Connections 
@@ -79,9 +75,7 @@ There was a lot of variability in the model across the basket of stocks.  Some p
 
 ![MSE](images/mse_diff.PNG)
 
-# Analysis Results / Observations
-
-*Discuss your findings. Was the model sufficient for the predictive task? If not, why not? What inferences or general conclusions can you draw from your model performance?*  
+# Analysis Results / Observations  
 Overall, the model was inconclusive.  While it appears ineffective, there are several factors contributing to this:
   * Limited input data, reducing the effectiveness of the model training.
   * High level of volatility of the basket of equities, causing the model to underestimate the price changes.
