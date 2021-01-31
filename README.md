@@ -82,15 +82,21 @@ There was a lot of variability in the model across the basket of stocks.  Some p
 # Analysis Results / Observations
 
 *Discuss your findings. Was the model sufficient for the predictive task? If not, why not? What inferences or general conclusions can you draw from your model performance?*  
+Overall, the model was inconclusive.  While it appears ineffective, there are several factors contributing to this:
+  * Limited input data, reducing the effectiveness of the model training.
+  * High level of volatility of the basket of equities, causing the model to underestimate the price changes.
+  * "Off the shelf" NLP models were unable to accurately assess the colloquialisms used in the tweets and posts from the input sources.
+  * Many images are used to indicate sentiment, but without manually annotating the unicode values for these images, the NLP functions fail to get "the full picture".
+  * Accuracy was highest for Tesla, as expected, since it is more globally discussed and has settled down in terms of volatility compared to its counterparts in the model.
+  * During less turbulent times, and with longer training periods and less market manipulation, this model could prove more predictive than during the project.
 
 # Postmortem
 
-*Discuss any difficulties that arose, and how you dealt with them.
-Discuss any additional questions or problems that came up but you didn't have time to answer: What would you research next if you had two more weeks?*
-There was definitely some user error at times.  Referencing the incorrect dataframe, overwriting one class with another class, or running/outputting to the incorrect file.
-Overall, we probably spent too much time getting the data into the correct format for the models.  This should improve with experience and practice.
-The API limitations caused us to switch over to CSVs for input, which worked fine for the build.  In a production environment we would switch out the CSV inputs to API calls.
-With additional time and data availability, we would use more data to train the model to see if it improves, add additional features, and increase the comparisons to determine the strength of the effect of different features on the model.  
+* There was definitely some user error at times.  Referencing the incorrect dataframe, overwriting one class with another class, or running/outputting to the incorrect file.
+* Overall, we probably spent too much time getting the data into the correct format for the models.  This should improve with experience and practice.
+* The API limitations caused us to switch over to CSVs for input, which worked fine for the build.  In a production environment we would switch out the CSV inputs to API calls.
+* With additional time and data availability, we would use more data to train the model to see if it improves, add additional features, and increase the comparisons to determine the strength of the effect of different features on the model.
+* We would also consider back-testing if the model is deemed effective, as well as run several other models to see if they are more predictive.
 
 ____________________________________________________________________________________________________________________
 <sup>1 Emoji images - https://i1.wp.com/thedatascientist.com/wp-content/uploads/2018/10/sentiment-analysis.png
