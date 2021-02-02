@@ -1,3 +1,4 @@
+#Imports
 import pandas as pd
 import numpy as np
 import pandas as pd
@@ -8,8 +9,9 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 
+#Defining function for the three-feature model
 def get_mse(ticker, num_units, dropout, epochs, batch_size, window_size, train_size, target_col_number):
-   
+
     df = pd.read_csv(f'Data/Master/{ticker}.csv', index_col="Created", infer_datetime_format=True, parse_dates=True)
     df = df.dropna()
 
@@ -65,7 +67,9 @@ def get_mse(ticker, num_units, dropout, epochs, batch_size, window_size, train_s
     model.add(Dense(1))
 
     #Compiling the model
-    model.compile(optimizer = "adam", loss = "mean_squared_error")
+    model.compile(optimizer = "adam", 
+                  loss = "mean_squared_error",
+                     )
 
     #Fitting the model
     model.fit(
@@ -85,7 +89,7 @@ def get_mse(ticker, num_units, dropout, epochs, batch_size, window_size, train_s
                 }, index = df.index[-len(real_prices): ]) 
 
     error = model.evaluate(X_test, y_test)
-
+    
     MSE = []
 
     MSE.append(ticker)
@@ -93,6 +97,7 @@ def get_mse(ticker, num_units, dropout, epochs, batch_size, window_size, train_s
         
     return stocks, MSE
 
+#Defining function for one-feature model
 def get_one_feature_model(ticker, num_units, dropout, epochs, batch_size, window_size, train_size, target_col_number, feature_col_number):
    
     df = pd.read_csv(f'Data/Master/{ticker}.csv', index_col="Created", infer_datetime_format=True, parse_dates=True)
@@ -181,6 +186,7 @@ def get_one_feature_model(ticker, num_units, dropout, epochs, batch_size, window
     return stocks, MSE
 
 
+#Defining function to get twitter sentiment joined together and saved to CSVs
 def twitter_sentiment_scores(tickers):
     
     for symbol in tickers:
@@ -215,7 +221,8 @@ def twitter_sentiment_scores(tickers):
         
         print(f"{symbol} saved to csv!")
         
-def price_vs_sentiment(tickers):
+#Defining a function that gathers the current data for price vs settlement and saves as CSVs
+        def price_vs_sentiment(tickers):
     
     for symbol in tickers:
         

@@ -1,3 +1,4 @@
+#Imports
 import os
 import praw
 import quandl
@@ -8,8 +9,10 @@ import alpaca_trade_api as tradeapi
 
 load_dotenv()
 
+#Function to authorize access to various APIs
 def OAuth(api):
 
+    #Reddit API authorization
     if api == "reddit":
         
         reddit_id = os.getenv("REDDIT_CLIENT_ID")
@@ -37,6 +40,7 @@ def OAuth(api):
         
         return reddit_auth
     
+    #Quandl API authorization
     elif api == "quandl":
         
         quandl_key = os.getenv("quandl_key")
@@ -50,6 +54,7 @@ def OAuth(api):
         
         return quandl
     
+    #Alpaca API authorization
     elif api == "alpaca":
         
         alpaca_api_key = os.getenv("ALPACA_API_KEY")
@@ -74,6 +79,7 @@ def OAuth(api):
         
         return alpaca
 
+    #Twitter API authorization
     elif api == "twitter":
         consumer_key = os.getenv("TWITTER_CONSUMER_KEY")
         consumer_secret = os.getenv("TWITTER_CONSUMER_SECRET_KEY")
@@ -103,6 +109,7 @@ def OAuth(api):
         print("Incorrect API Name")
 
 
+#Function to get access to specific subreddit using PRAW
 def fetch_subreddit(reddit_access, subreddit):
     
     subreddit = reddit_access.subreddit(subreddit)
@@ -110,7 +117,7 @@ def fetch_subreddit(reddit_access, subreddit):
     
     return subreddit
 
-
+#Function to get reddit comments using PRAW
 def fetch_reddit_comments(api_connection, search, subreddit, max_response):
     
     posts = api_connection.search_submissions(q=search, subreddit=subreddit)
@@ -146,7 +153,8 @@ def fetch_reddit_comments(api_connection, search, subreddit, max_response):
     print(f"Your request returned {length} results.")
     
     return cleaned_comments
-        
+
+#Function for getting alpaca data
 def fetch_alpaca(alpaca, tickers, start_date, end_date, period):
     
     start = pd.Timestamp(start_date, tz="America/New_York").isoformat()
@@ -162,7 +170,8 @@ def fetch_alpaca(alpaca, tickers, start_date, end_date, period):
     stock_data = stock_data.iloc[:, stock_data.columns.get_level_values(1)=='close']
     
     return stock_data
-    
+
+#Function for getting quandl data
 def fetch_quandl(quandl, tickers, start_date, end_date):
     
     data = quandl.get(tickers, start_date=start_date, end_date=end_date)
